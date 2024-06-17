@@ -1,0 +1,142 @@
+#Funcion que hace la grafica de effectos de la variable (solo una)
+#deseadas. Recibe como argumentos:
+#datos: un dataframe con los datos originales, (incluye la variable respuesta)
+#variable: vector 2 dimensional, c(respuesta, efecto), la primer entrada
+#   corresponde a la variable respuesta y la segunda la variable a la cual se
+#   se le desea obtener los efectos.
+#copulas: lista, contiene las copulas obtenidas del modelo
+#alpha: vector de double, el nivel alpha con el cual se va a hacer
+#       la regresión cuantil
+#nombre: character, nombre con el caul se va guardar la imagen.
+#Retorna un 1, si la función tiene éxito.
+plot_effects <- function(datos, variable, copulas, alpha, nombre){
+  data <- data.frame(datos)
+  medias <- colMeans(datos)
+
+  #Se crea un data.frame auxilar con las medias de las otras variables
+  #que no son la respuesta y la desada
+  for (var in colnames(redMujeres)) {
+    if (!(var %in% variable)){
+      data[var] <- medias[var]
+    }
+  }
+
+  #Se hace la regresión pasra distintos niveles de alpha
+  datosAlphas <- data.frame(matrix(ncol = length(alpha), nrow = nrow(data)))
+  colnames(datosAlphas) <- as.character(alpha)
+
+  for (i in 1:length(alpha)){
+    datosAlphas[,i] <- regresionPred(datos, data, datos[,1], alpha[i], copulas)
+  }
+  datosAlphas$x <- datos[[variable[2]]]
+
+  #Se un pivote para poder graficar los efectos
+  dfgraf <- datosAlphas %>% pivot_longer(!x, names_to = "Alphas", values_to = "Pred")
+
+  #Se hace la grafica
+  graf <- ggplot(dfgraf, aes(x = x, y = Pred, colour = Alphas)) +
+          geom_point() +
+          geom_smooth(method = "lm", formula = y ~ splines::bs(x, 5), se = FALSE) + #geom_smooth(se = FALSE) +
+          ylab('Q(a)') + xlab(paste0(variable[2])) + ggtitle('Grafica de Efectos')
+  ggsave(graf, file = paste0(nombre, '.png'), width = 4.5, height = 4)
+  return(1)
+}
+
+#Función que hace la grafica de efectos de todas las variables de un modelo.
+#Recide como parametros:
+#datos: data.frame, con todos los datos originales del modelo (incluyendo la
+#     la variable respuesta)
+#y: vector o dataframe con la variable respuesta
+#copula: lista que contiene todas las copulas ajustadas del modelo
+#id: string, que contiene el identificador que se va a poner en el nombre
+#   de la imagen cuando se guarde
+#alphas: vector de double. Vector que contiene los niveles con los que
+#       se va a hacer la regresión cuantil.
+alleffect <- function(datos, y, copulas, id, alphas){
+  for (var in colnames(datos[-c(1)])){
+    plot_effects(datos, c(y, var), copulas,
+                 alphas, paste0(id, var, 'Efec'))
+  }
+}
+
+#Copulas para el nivel
+cNivell <- function(nCopNivel, paraNivel, T = nNodos){
+  cop <- c()
+  secuencia <- rep(0, nCopNivel)
+
+  if (paraNivel == 2){
+    l <- 1; j <- 2
+    for (i in secuencia) {
+      cop <- c(cop, paste0('C', l, j))
+      l <- l + 1; j <- j + 1
+    }
+  }else{
+    for (i in 1:length(secuencia)){
+      ind <- c(i:(i + (paraNivel-1)) )
+      segundo <- paste(ind[2:(length(ind)-1)], collapse = '')
+      primer <- paste0('C', ind[1], max(ind), '|', segundo)
+      cop <- c(cop, primer)
+    }
+  }
+  return(cop)
+}
+
+#Función que grafica todas las copulas
+levelsVine <- function(nodos, Udata, copulas, h_selection, id, col = inferno(20)){
+  ncolo <- 1
+
+  for (nivel in 1:(nodos-1) ){
+    if (nivel == 1){
+      #Nivel 1 -Copulas sencillas
+      for (i in 1:(nodos-1)){
+        png(paste0('CdeN', id, 'C', i, i+1,'.png'),
+            width = 800, height = 600)
+        contour(copulas[[paste0('C', i, i+1)]], margins = "unif",
+                col = col[ncolo], lwd = 3,
+                main = paste0('Curvas de Nivel ', paste0('C', i, i+1)))
+        points(Udata[,i], Udata[,i+1], pch = 20, col = rgb(0, 0, 0, alpha = 0.5))
+        dev.off()
+
+        graf <- diagonal(Udata[c(i, i+1)]) + ggtitle(paste0('Diagonal ', 'C', i, i+1))
+        ggsave(graf, file = paste0('Diag', id, 'C', i, i+1, '.png'))
+
+        ncolo <- ncolo + 1
+      }
+    }else{
+      if ((nodos-(nivel + 1)) >= 0){
+        #Para niveles profundos - Con h's
+        ncops <- cNivel(nodos-nivel, nivel + 1, T = nNodos)
+        cops <- cNivell(nodos-nivel, nivel + 1, T = nNodos)
+        print(cops)
+        for (copName in cops){
+          i <- as.integer(substring(copName, 2, 2)); j <- as.integer(substring(copName, 3, 3))
+
+          cond <- substring(copName, 5, nchar(copName))
+          h1 <- paste0('h', i, '|', cond)
+          h2 <- paste0('h', j, '|', cond)
+
+          X <- data.frame(h1 = h_selection[[h1]],
+                          h2 = h_selection[[h2]])
+
+          png(paste0('CdeN', id,  ncops[i],'.png'),
+              width = 800, height = 600)
+          contour(copulas[[cops[i]]], margins = "unif", col = col[ncolo],
+                  lwd = 2, main = paste0('Curvas de Nivel ', cops[i]))
+          points(X[,1], X[,2], pch = 20, col = rgb(0, 0, 0, alpha = 0.5))
+          dev.off()
+
+          graf <- diagonal(X) + ggtitle(paste0('Diagonal ', ncops[i] ))
+          ggsave(graf, file = paste0('Diag', id, ncops[i], '.png'), width = 4.5, height = 4)
+
+          ncolo <- ncolo + 1
+        }
+      }
+    }
+  }
+}
+
+#setwd('C:/Users/zaboo/OneDrive/Documentos/CIMAT/Tesis/codigo/Mio/4variables')
+#levelsVine(5, Umujeres, copulas_selectM, h_selectM, 'Muj')
+#levelsVine(5, Uhombres, copulas_selectH, h_selectH, 'Hom')
+#levelsVine(5, Utotal, copulas_selectT, h_selectT, 'Total')
+

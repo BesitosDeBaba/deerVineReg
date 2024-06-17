@@ -1,0 +1,24 @@
+Package: deerVineReg
+Type: Package
+Title: D-Vine Regression
+Version: 0.1.0
+Author: Brenda Paola Quintana Silva
+Maintainer: Brenda Paola Quintana Silva <quintana1912@gmail.com>
+Description: This Package makes a quantile D-vine regression.
+    Use four spaces when indenting paragraphs within the Description.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Imports:
+	copula (>= 1.1-3),
+    VineCopula (>= 2.5.0),
+    pheatmap (>= 1.0.12),
+    paletteer (>= 1.6.0),
+    ggplot2 (>= 3.4.0),
+    gridExtra (>= 2.3),
+    tidyr (>= 1.1.0),
+    dplyr (>= 1.0.0),
+    copBasic (>= 2.2.4), 
+    cowplot (>= 1.1.3),
+    viridis (>= 0.6.5)
+RoxygenNote: 7.3.1

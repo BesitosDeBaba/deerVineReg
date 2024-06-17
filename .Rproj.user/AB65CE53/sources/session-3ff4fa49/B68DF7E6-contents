@@ -1,0 +1,95 @@
+setwd('C:/Users/zaboo/OneDrive/Documentos/CIMAT/Tesis')
+
+library(GGally)
+library(ggplot2)
+library(dplyr)
+library(paletteer)
+library(hrbrthemes)
+library(viridis)
+library(readxl)
+library(ggcorrplot)
+library(fda)
+library(pheatmap)
+library(naniar)
+
+base <- read_xlsx('BaseGlu.xlsx')
+base <- as.data.frame(base)
+
+colnames(base)
+base <-  base[c("Clave",  "GENERO (0=M;1=f)",
+"Gluc-0"  , "Gluc+30" , "Gluc+60" , "Gluc+90" , "Gluc+120",   "Ins-0" ,  "Ins-30",
+"Ins-60",  "Ins-90", "Ins-120",  "BMI",  "PA diast")]
+
+str(base)
+base <- base[-c(1698, 1699, 1700, 1701, 1702, 1703),]
+base$`GENERO (0=M;1=f)` <- as.factor(base$`GENERO (0=M;1=f)`)
+
+#Separa por Genero
+mujeres <- base[base$`GENERO (0=M;1=f)` == 0, ]
+hombres <- base[base$`GENERO (0=M;1=f)` == 1, ]
+
+##
+#Datos faltantes
+vis_miss(base)
+as.data.frame(colSums(is.na(base)))
+
+vis_miss(mujeres)
+as.data.frame(colSums(is.na(mujeres)))
+
+vis_miss(hombres)
+as.data.frame(colSums(is.na(hombres)))
+
+## Matriz de correlacion
+base <- na.omit(base)
+mujeres <- na.omit(mujeres)
+hombres <- na.omit(hombres)
+
+matSpe <- cor(base[-c(1,2)], method = 'spearman')
+matSigma <- corSWEC(base[-c(1,2)])
+
+pheatmap(matSpe, display_numbers = TRUE,
+         number_color = "black", fontsize_number = 8,
+         cluster_cols = FALSE, cluster_rows = FALSE)
+
+pheatmap(matSigma, display_numbers = TRUE,
+         number_color = "black", fontsize_number = 8,
+         cluster_cols = FALSE, cluster_rows = FALSE)
+
+#----------------------------------------------
+matMujSpe <- cor(mujeres[-c(1,2)], method = 'spearman')
+matMujSigma <- corSWEC(mujeres[-c(1,2)])
+
+pheatmap(matMujSpe, display_numbers = TRUE,
+         number_color = "black", fontsize_number = 8,
+         cluster_cols = FALSE, cluster_rows = FALSE)
+
+pheatmap(matMujSigma, display_numbers = TRUE,
+         number_color = "black", fontsize_number = 8,
+         cluster_cols = FALSE, cluster_rows = FALSE)
+#----------------------------------------------
+matHomSpe <- cor(hombres[-c(1,2)], method = 'spearman')
+matHomSigma <- corSWEC(hombres[-c(1,2)])
+
+pheatmap(matHomSpe, display_numbers = TRUE,
+         number_color = "black", fontsize_number = 8,
+         cluster_cols = FALSE, cluster_rows = FALSE)
+
+pheatmap(matHomSigma, display_numbers = TRUE,
+         number_color = "black", fontsize_number = 8,
+         cluster_cols = FALSE, cluster_rows = FALSE)
+
+#............................................
+bmiFn <- function(bmi){
+  if(bmi<25){
+    BMI="Peso Normal"
+  } else if(bmi<30){
+    BMI="Sobrepeso"
+  } else {
+    BMI="Obesidad"
+  }
+  BMI
+}
+
+base$BMIclas <- sapply(base$BMI, bmiFn)
+base$BMIclas <- as.factor(base$BMIclas)
+base$BMIclas <- factor(base$BMIclas, levels = c("Peso Normal", "Sobrepeso", "Obesidad"))
