@@ -1,8 +1,12 @@
 # Regresión Cuantil usando Copulas
 
+## Cómo instalar la paqueteria
+
+```
+devtools::install_github("BesitosDeBaba/deerVineReg")
+```
+
 ## Ejemplo de uso
-
-
 ```
 library(deerVineReg)
 
