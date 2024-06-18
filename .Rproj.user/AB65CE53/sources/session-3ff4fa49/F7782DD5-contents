@@ -67,14 +67,14 @@ heats <- function(UX, copNombre, n = 100){
   breaksrho <- seq(-1, 1, by = 0.02)
   breaksigma <- seq(0, 1, by = 0.01)
 
-  rho <- pheatmap::pheatmap(rho, breaks = breaksrho, border_color = NA,
+  rho <- pheatmap::pheatmap(rho[nrow(rho):1,], breaks = breaksrho, border_color = NA,
                   cluster_cols = FALSE,
                   cluster_rows = FALSE, main = paste0('rho ', copNombre))
   print(rho)
   readline(prompt="Press [enter] to continue")
   #ggsave(rho, file = paste0(id, 'rho', nombre, '.png'), width = 4.5, height = 4)
 
-  sigma <- pheatmap::pheatmap(sigma, breaks = breaksigma, border_color = NA,
+  sigma <- pheatmap::pheatmap(sigma[nrow(sigma):1,], breaks = breaksigma, border_color = NA,
                     color = rev(paletteer::paletteer_c("grDevices::PuBuGn", 200)),
                     cluster_cols = FALSE,
                     cluster_rows = FALSE, main = paste0('Sigma ', copNombre))
@@ -96,7 +96,7 @@ heats <- function(UX, copNombre, n = 100){
 
   heat <- ggplot2::ggplot(H_melt, ggplot2::aes(X1, X2)) + ggplot2::geom_tile(ggplot2::aes(fill = value))  +
     ggplot2::scale_fill_gradientn(colours = grDevices::hcl.colors(100, palette = "spectral", rev = TRUE),
-                         limits = c(-1, 1)) + ggplot2::ylim(1, 0)
+                         limits = c(-1, 1))
 
   H <- heat + ggplot2::geom_point(data = UX,
                                   ggplot2::aes(x = UX[,1], y = UX[,2]),
