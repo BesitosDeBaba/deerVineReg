@@ -57,7 +57,7 @@ These functions are implemented to visualize the shape of each copula. That allo
 
 **diagonalGraf** - This function makes a graph that in triangular upper shows dispersion graphs and in triangular lower shows the diagnonal of reference copulas ($Pi$, $W$, $M$ and empirical copula, if you want to know how to interprete this graph read [this](	https://tesiunam.dgb.unam.mx/F?current_base=TES01&func=direct&doc_number=000691296)). You have to introduce: 
 
-*model* - An D-vine object.
+*model* - D-vine object.
 
 ```
 #Visualizacion del modelo
@@ -102,8 +102,8 @@ $$
 
 You have to introduce:
 
-*model* - D-vine object.
-*copName* - A string with the name of the copula that you want to know its behavior.
+- *model* - D-vine object.
+- *copName* - A string with the name of the copula that you want to know its behavior.
 
 ```
 #Ver la forma especifica de una copula
